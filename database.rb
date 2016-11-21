@@ -4,17 +4,16 @@ class DataEngine
   def initialize
     @people = []
 
-    CSV.foreach("employees.csv", headers:true) do |person|
+    CSV.foreach("employees.csv", headers:true) do |line|
       person = Person.new
-      name = person["name"]
-      address = person["address"]
-      position = person["position"]
-      phone_number = person["phone"]
-      salary = person["salary"]
-      slack_account = person["slack"]
-      github_account = person["github"]
+      person.name = line["name"]
+      person.address = line["address"]
+      person.position = line["position"]
+      person.phone_number = line["phone"]
+      person.salary = line["salary"]
+      person.slack_account = line["slack"]
+      person.github_account = line["github"]
 
-      add_to_data(name, address, position, phone_number, salary, slack_account, github_account)
       @people << person
     end
   end
@@ -70,12 +69,12 @@ class DataEngine
     puts "Who would you like to search for in the database?"
     puts
     search_name = gets.chomp
-    matches = @people.select { |person| person.name.include?(search_name) || peron.github_account == search_name || person.slack_account == search_name }
-    if matches.empty?
+    matched_person = @people.select { |person| person.name.include?(search_name) || person.github_account == search_name || person.slack_account == search_name }
+    if matched_person.empty?
       puts
       puts "Sorry, that person doesn't party with us!"
     else
-      matches.each do |person|
+      matched_person.each do |person|
         puts
         puts "Found the life of the party!"
         puts
@@ -102,16 +101,15 @@ class DataEngine
   end
 
   def prompt_for_add
-    puts
     puts "Who would you like to add to the database?"
-    puts
-    name = gets.chomp
-    matches = @people.select { |person| person.name == name }
+    add_name = gets.chomp
+    matches = @people.select { |person| person.name == add_name }
     if matches.any?
       puts
       puts "Sorry, that person is already in the party"
     else
-      person = Person.new(name)
+      person = Person.new
+      person.name = add_name
       puts
       puts "What is #{name}'s address?"
       puts
@@ -135,10 +133,9 @@ class DataEngine
       puts "What is #{name}'s github account?"
       puts
       person.github_account = gets.chomp
+      @people << person
+      save_people
     end
-
-    @people << person
-    save_people
   end
 
   def prompt_for_delete
@@ -159,6 +156,19 @@ class DataEngine
     save_people
   end
 
+  def prompt_for_reoprt
+    @people.each do |person|
+      puts "Name: #{person.name}"
+      puts "Address: #{person.address}"
+      puts "Phone number: #{person.phone_number}"
+      puts "Salary: #{person.salary}"
+      puts "Position: #{person.position}"
+      puts "Github: #{person.github_account}"
+      puts "Slack: #{person.slack_account}"
+      puts
+    end
+  end
+
   def menu
     loop do
       puts "Welcome to The Iron Yard database! There are #{@people.length} people in this database"
@@ -170,6 +180,8 @@ class DataEngine
           prompt_for_add
         when "S", "Search"
           prompt_for_search
+        when "R", "Report"
+          prompt_for_reoprt
         else
           puts "I didn't quite understand your request"
       end
@@ -179,10 +191,6 @@ end
 
 class Person
   attr_accessor :name, :address, :position, :phone_number, :salary, :slack_account, :github_account
-
-  def initialize(name)
-    @name = name
-  end
 end
 
 my_database = DataEngine.new
