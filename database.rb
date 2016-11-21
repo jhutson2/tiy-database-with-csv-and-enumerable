@@ -4,7 +4,8 @@ class DataEngine
   def initialize
     @people = []
 
-    CSV.foreach("people.csv", headers:true) do |person|
+    CSV.foreach("employees.csv", headers:true) do |person|
+      person = Person.new
       name = person["name"]
       address = person["address"]
       position = person["position"]
@@ -14,12 +15,12 @@ class DataEngine
       github_account = person["github"]
 
       add_to_data(name, address, position, phone_number, salary, slack_account, github_account)
-
+      @people << person
     end
   end
 
   def save_people
-    csv = CSV.open("people.csv", "w")
+    csv = CSV.open("employees.csv", "w")
     csv.add_row %w{name address position phone salary slack github}
 
     @people.each do |person|
@@ -69,35 +70,34 @@ class DataEngine
     puts "Who would you like to search for in the database?"
     puts
     search_name = gets.chomp
-    matches = @people.select { |person| person.name == search_name }
-
+    matches = @people.select { |person| person.name.include?(search_name) || peron.github_account == search_name || person.slack_account == search_name }
     if matches.empty?
       puts
       puts "Sorry, that person doesn't party with us!"
-    end
-
-    matches.each do |person|
-      puts
-      puts "Found the life of the party!"
-      puts
-      puts "address"
-      puts person.address
-      puts
-      puts "phone number"
-      puts person.phone_number
-      puts
-      puts "position"
-      puts person.position
-      puts
-      puts "salary"
-      puts person.salary
-      puts
-      puts "slack account"
-      puts person.slack_account
-      puts
-      puts "github account"
-      puts person.github_account
-      puts
+    else
+      matches.each do |person|
+        puts
+        puts "Found the life of the party!"
+        puts
+        puts "address"
+        puts person.address
+        puts
+        puts "phone number"
+        puts person.phone_number
+        puts
+        puts "position"
+        puts person.position
+        puts
+        puts "salary"
+        puts person.salary
+        puts
+        puts "slack account"
+        puts person.slack_account
+        puts
+        puts "github account"
+        puts person.github_account
+        puts
+      end
     end
   end
 
@@ -107,35 +107,35 @@ class DataEngine
     puts
     name = gets.chomp
     matches = @people.select { |person| person.name == name }
-
     if matches.any?
       puts
       puts "Sorry, that person is already in the party"
+    else
+      person = Person.new(name)
+      puts
+      puts "What is #{name}'s address?"
+      puts
+      person.address = gets.chomp
+      puts
+      puts "What is #{name}'s phone number?"
+      puts
+      person.phone_number = gets.chomp
+      puts "What is #{name}'s position?"
+      puts
+      person.position = gets.chomp
+      puts
+      puts "What is #{name}'s salary?"
+      puts
+      person.salary = gets.chomp
+      puts
+      puts "What is #{name}'s slack account"
+      puts
+      person.slack_account = gets.chomp
+      puts
+      puts "What is #{name}'s github account?"
+      puts
+      person.github_account = gets.chomp
     end
-    person = Person.new(name)
-    puts
-    puts "What is #{name}'s address?"
-    puts
-    person.address = gets.chomp
-    puts
-    puts "What is #{name}'s phone number?"
-    puts
-    person.phone_number = gets.chomp
-    puts "What is #{name}'s position?"
-    puts
-    person.position = gets.chomp
-    puts
-    puts "What is #{name}'s salary?"
-    puts
-    person.salary = gets.chomp
-    puts
-    puts "What is #{name}'s slack account"
-    puts
-    person.slack_account = gets.chomp
-    puts
-    puts "What is #{name}'s github account?"
-    puts
-    person.github_account = gets.chomp
 
     @people << person
     save_people
@@ -146,18 +146,16 @@ class DataEngine
     puts "Who do you wish to delete from database?"
     puts
     delete_name = gets.chomp
-    matches = @people.select { |person| person.name == delete_name }
-    if matches.empty?
-      puts
-      puts "Sorry, that person doesn't party with us!"
-    end
-
-    if delete_name == matches.any?
+    if @people.any? { |person| person.name == delete_name }
+      @people.delete_if { |person| person.name == delete_name }
       puts
       puts "Found the party pooper, removing #{person.name} from the party!"
       puts
-      @people.delete(person)
-      end
+    else
+      puts
+      puts "Sorry, that person doesn't party with us!"
+      puts
+    end
     save_people
   end
 
